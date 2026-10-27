@@ -9,9 +9,10 @@ Veri: İngiltere Premier Lig, 2010-08-14 – 2020-07-26, 3800 maç. Değerlendir
 | 3) + form (mevcut üretim) | 52.7% | 1.0031 | 0.5938 | 0.2064 | 52.7% | 0.7276 | 50.9% | 0.7270 |
 | 4) üretim + daraltma (k=10) | 52.8% | 0.9870 | 0.5870 | 0.2034 | 53.1% | 0.6967 | 51.1% | 0.7005 |
 | 5) iç saha/dep. + daraltma, formsuz | 52.6% | 0.9902 | 0.5894 | 0.2045 | 53.3% | 0.6961 | 51.4% | 0.7006 |
-| R1) Lig sonuç frekansı | 45.7% | 1.0642 | 0.6429 | 0.2302 | 46.7% | 0.6931 | 48.7% | 0.6931 |
+| 6) üretim + toplam gol daraltması (β=0.4) | 52.8% | 0.9870 | 0.5870 | 0.2034 | 54.3% | 0.6882 | 52.4% | 0.6935 |
+| R1) Lig sonuç frekansı | 45.7% | 1.0642 | 0.6429 | 0.2302 | 53.3% | 0.6914 | 51.3% | 0.6934 |
 
-R1'in 2.5 Üst ve KG değerleri sabit %50 tahmindir (yalnızca karşılaştırma içindir).
+R1 referansı: o ana kadarki lig sonuç/2.5 üst/KG frekanslarını söyler. Bir model bu satırı geçmiyorsa o pazarda gerçek sinyali yoktur.
 
 ## Kalibrasyon: ev galibiyeti — 4) üretim + daraltma (k=10)
 

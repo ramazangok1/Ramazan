@@ -77,19 +77,21 @@ def takim_istatistik(gecmis, lig, ayar):
 
 
 AYARLAR = {
-    "1) Taban: genel ortalama": {"bol": False, "form": False, "daralt": False},
-    "2) + iç saha/deplasman": {"bol": True, "form": False, "daralt": False},
-    "3) + form (mevcut üretim)": {"bol": True, "form": True, "daralt": False},
-    "4) üretim + daraltma (k=10)": {"bol": True, "form": True, "daralt": True},
-    "5) iç saha/dep. + daraltma, formsuz": {"bol": True, "form": False, "daralt": True},
+    "1) Taban: genel ortalama": {"bol": False, "form": False, "daralt": False, "beta": 1.0},
+    "2) + iç saha/deplasman": {"bol": True, "form": False, "daralt": False, "beta": 1.0},
+    "3) + form (mevcut üretim)": {"bol": True, "form": True, "daralt": False, "beta": 1.0},
+    "4) üretim + daraltma (k=10)": {"bol": True, "form": True, "daralt": True, "beta": 1.0},
+    "5) iç saha/dep. + daraltma, formsuz": {"bol": True, "form": False, "daralt": True, "beta": 1.0},
+    "6) üretim + toplam gol daraltması (β=0.4)": {"bol": True, "form": True, "daralt": True, "beta": None},
 }
 
 
 def tahmin(ev_t, dep_t, lig, ayar):
+    beta = ayar["beta"]  # 1.0 = toplam gol daraltması yok
     if ayar["form"]:
-        return analysis.mac_oncesi(ev_t, dep_t, lig)
+        return analysis.mac_oncesi(ev_t, dep_t, lig, beta)
     lam_e, lam_d = analysis.beklenen_goller(ev_t, dep_t, lig)
-    return analysis.olasiliklar(lam_e, lam_d)
+    return analysis.olasiliklar(lam_e, lam_d, ou_lam=analysis.toplam_lam(lam_e, lam_d, lig, beta))
 
 
 def sonuc_idx(eg, dg):
@@ -121,18 +123,22 @@ def calistir(maclar):
     gecmis = defaultdict(list)
     lig_toplam = [0, 0, 0]  # ev golü, dep golü, maç sayısı
     sonuc_sayac = [0, 0, 0]
+    ust_sayac = kg_sayac = 0
     kayit = defaultdict(list)
     for tarih, ev, dep, eg, dg in maclar:
         n_lig = lig_toplam[2]
         if (n_lig >= ISINMA_LIG and len(gecmis[ev]) >= MIN_MAC and len(gecmis[dep]) >= MIN_MAC):
             lig = (lig_toplam[0] / n_lig, lig_toplam[1] / n_lig)
             for ad, ayar in AYARLAR.items():
-                kayit[ad].append((tahmin(takim_istatistik(gecmis[ev], lig, ayar),
-                                         takim_istatistik(gecmis[dep], lig, ayar), lig, ayar), (eg, dg)))
+                p = tahmin(takim_istatistik(gecmis[ev], lig, ayar),
+                           takim_istatistik(gecmis[dep], lig, ayar), lig, ayar)
+                p["lig"] = lig
+                kayit[ad].append((p, (eg, dg)))
             # Referans 1: lig frekansı. Referans 2: hep ev sahibi
             f = [c / n_lig for c in sonuc_sayac]
             kayit["R1) Lig sonuç frekansı"].append(
-                ({"ev": f[0], "beraberlik": f[1], "dep": f[2], "ust25": 0.5, "kg_var": 0.5}, (eg, dg)))
+                ({"ev": f[0], "beraberlik": f[1], "dep": f[2],
+                  "ust25": ust_sayac / n_lig, "kg_var": kg_sayac / n_lig}, (eg, dg)))
         # sonra geçmişe ekle
         r = sonuc_idx(eg, dg)
         gecmis[ev].append((True, eg, dg, "GBM"[r]))
@@ -141,6 +147,8 @@ def calistir(maclar):
         lig_toplam[1] += dg
         lig_toplam[2] += 1
         sonuc_sayac[r] += 1
+        ust_sayac += eg + dg > 2
+        kg_sayac += eg > 0 and dg > 0
     return kayit
 
 
@@ -164,7 +172,8 @@ def rapor(maclar, kayit):
         m = metrikler(kayit[ad])
         s.append(f"| {ad} | {m['acc']:.1%} | {m['ll']:.4f} | {m['brier']:.4f} | {m['rps']:.4f} | "
                  f"{m['u_acc']:.1%} | {m['u_ll']:.4f} | {m['b_acc']:.1%} | {m['b_ll']:.4f} |")
-    s.append("\nR1'in 2.5 Üst ve KG değerleri sabit %50 tahmindir (yalnızca karşılaştırma içindir).\n")
+    s.append("\nR1 referansı: o ana kadarki lig sonuç/2.5 üst/KG frekanslarını söyler. Bir model bu satırı geçmiyorsa "
+             "o pazarda gerçek sinyali yoktur.\n")
     en_iyi = min((a for a in kayit if a[0].isdigit()), key=lambda a: metrikler(kayit[a])["rps"])
     s.append(f"## Kalibrasyon: ev galibiyeti — {en_iyi}\n\n| Tahmin aralığı | Maç | Ortalama tahmin | Gerçekleşen |\n|---|---|---|---|")
     for k, n, tah, ger in kalibrasyon(kayit[en_iyi]):
