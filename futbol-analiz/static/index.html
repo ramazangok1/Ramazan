@@ -16,6 +16,7 @@ main{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:14px;padding
 .mac{padding:10px;border-radius:8px;cursor:pointer;border:1px solid transparent}
 .mac:hover,.mac.sel{border-color:var(--b)}
 .mac .s{display:flex;justify-content:space-between;font-weight:600}
+.uyari{color:var(--y);font-size:12px;cursor:help;margin-left:4px}
 .muted{color:var(--m);font-size:13px}.live{color:var(--r);font-weight:700}
 .bar{display:flex;height:26px;border-radius:6px;overflow:hidden;margin:8px 0;font-size:12px;font-weight:700;color:#fff}
 .bar div{display:flex;align-items:center;justify-content:center;min-width:0}
@@ -47,7 +48,7 @@ function bar(a,b,c,l=["Ev","Ber.","Dep."]){return `<div class="bar"><div style="
 function formH(f){return `<span class="form">${f.map(x=>`<span style="background:${renk[x]}">${x}</span>`).join("")}</span>`}
 function blok(baslik,p){return `<div class="card"><h2>${baslik}</h2>${bar(p.ev,p.beraberlik,p.dep)}
  <div class="row"><span>2.5 Üst / Alt</span><b>${pct(p.ust25)} / ${pct(p.alt25)}</b></div>
- <div class="row"><span>Karşılıklı gol Var / Yok</span><b>${pct(p.kg_var)} / ${pct(p.kg_yok)}</b></div>
+ <div class="row"><span>Karşılıklı gol Var / Yok <span class="uyari" title="8 ligde yapılan backtestte KG tahmini, lig ortalamasını söylemekten belirgin şekilde iyi çıkmadı (bkz. BACKTEST_cok_lig.md). Bilgi amaçlı bakın.">⚠ düşük güvenilirlik</span></span><b>${pct(p.kg_var)} / ${pct(p.kg_yok)}</b></div>
  <div class="row"><span>En olası skorlar</span><b>${p.skorlar.slice(0,4).map(s=>s.skor+" ("+pct(s.olasilik)+")").join(" · ")}</b></div></div>`}
 const f2=x=>x==null?"–":(+x).toFixed(2);
 const rolAd={forvet:"forvet",ortasaha:"orta saha",defans:"defans",kaleci:"kaleci"};
