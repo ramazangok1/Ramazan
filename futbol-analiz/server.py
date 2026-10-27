@@ -5,10 +5,14 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
 import analysis
-from provider import DemoProvider, ApiFootballProvider
+from provider import DemoProvider, ApiFootballProvider, FootballDataProvider
 
-ANAHTAR = os.environ.get("APIFOOTBALL_KEY")
-PROVIDER = ApiFootballProvider(ANAHTAR) if ANAHTAR else DemoProvider()
+if os.environ.get("APIFOOTBALL_KEY"):
+    PROVIDER = ApiFootballProvider(os.environ["APIFOOTBALL_KEY"])
+elif os.environ.get("FOOTBALL_DATA_KEY"):
+    PROVIDER = FootballDataProvider(os.environ["FOOTBALL_DATA_KEY"])
+else:
+    PROVIDER = DemoProvider()
 STATIC = os.path.join(os.path.dirname(__file__), "static")
 
 
@@ -18,6 +22,10 @@ def analiz_et(mac_id):
     cikti = {"ozet": o, "ev": d["ev"], "dep": d["dep"], "h2h": d["h2h"],
              "istatistik": d["istatistik"], "kirmizi": d["kirmizi"],
              "mac_oncesi": analysis.mac_oncesi(d["ev"], d["dep"])}
+    pazar = analysis.piyasa(d.get("oranlar"))
+    cikti["piyasa"] = pazar
+    cikti["oranlar"] = d.get("oranlar")
+    cikti["deger"] = analysis.deger(cikti["mac_oncesi"], pazar)
     if o["durum"] == "canli":
         cikti["canli"] = analysis.canli(d["ev"], d["dep"], o["dakika"] or 0,
                                         tuple(o["skor"]), tuple(d["kirmizi"]), d["istatistik"])

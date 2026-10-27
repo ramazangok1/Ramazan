@@ -10,12 +10,38 @@ def pmf(k, lam):
     return exp(-lam) * lam**k / factorial(k)
 
 
+ROL_ETKISI = {  # (kendi hücumu, kendi savunması: yenilen gol çarpanı)
+    "forvet": (0.93, 1.0), "ortasaha": (0.97, 1.03),
+    "defans": (1.0, 1.06), "kaleci": (1.0, 1.15),
+}
+
+
+def sakatlik_carpani(sakatlar):
+    """sakatlar: [{'oyuncu':..,'rol':'forvet|ortasaha|defans|kaleci'}] -> (hücum, yenilen) çarpanı."""
+    hucum = yenilen = 1.0
+    for s in sakatlar or []:
+        h, y = ROL_ETKISI.get(s.get("rol"), (1.0, 1.0))
+        hucum *= h
+        yenilen *= y
+    return max(hucum, 0.75), min(yenilen, 1.3)
+
+
+def _sayi(takim, ic_saha, tur):
+    """İç saha/deplasman ayrı ortalaması varsa onu, yoksa genel ortalamayı kullanır."""
+    ozel = takim.get(("ev_" if ic_saha else "dep_") + tur)
+    return ozel if ozel else takim[tur]
+
+
 def beklenen_goller(ev, dep):
-    """ev/dep: {'atilan': maç başı atılan gol, 'yenilen': maç başı yenilen gol}"""
-    ev_hucum = ev["atilan"] / LIG_ORT_EV
-    dep_savunma = dep["yenilen"] / LIG_ORT_EV
-    dep_hucum = dep["atilan"] / LIG_ORT_DEP
-    ev_savunma = ev["yenilen"] / LIG_ORT_DEP
+    """ev/dep: {'atilan', 'yenilen'} (+ isteğe bağlı 'ev_atilan','ev_yenilen','dep_atilan',
+    'dep_yenilen' ve 'sakat'). Ev avantajı, iç saha/deplasman ayrı ortalamalarından
+    ve lig iç saha/deplasman gol ortalamalarından gelir."""
+    e_h, e_y = sakatlik_carpani(ev.get("sakat"))
+    d_h, d_y = sakatlik_carpani(dep.get("sakat"))
+    ev_hucum = _sayi(ev, True, "atilan") * e_h / LIG_ORT_EV
+    dep_savunma = _sayi(dep, False, "yenilen") * d_y / LIG_ORT_EV
+    dep_hucum = _sayi(dep, False, "atilan") * d_h / LIG_ORT_DEP
+    ev_savunma = _sayi(ev, True, "yenilen") * e_y / LIG_ORT_DEP
     return (ev_hucum * dep_savunma * LIG_ORT_EV,
             dep_hucum * ev_savunma * LIG_ORT_DEP)
 
@@ -90,3 +116,21 @@ def canli(ev, dep, dakika, skor, kirmizi=(0, 0), istatistik=None):
     sonuc = olasiliklar(lam_ev, lam_dep, skor)
     sonuc.update(kalan_beklenen_ev=lam_ev, kalan_beklenen_dep=lam_dep)
     return sonuc
+
+
+def piyasa(oranlar):
+    """Ondalık oranlardan marjı arındırılmış olasılıklar. oranlar={'ev':1.9,'ber':3.4,'dep':4.2}"""
+    if not oranlar:
+        return None
+    ters = {k: 1 / v for k, v in oranlar.items() if v}
+    if len(ters) < 3:
+        return None
+    t = sum(ters.values())
+    return {"ev": ters["ev"] / t, "beraberlik": ters["ber"] / t, "dep": ters["dep"] / t, "marj": t - 1}
+
+
+def deger(model, pazar):
+    """Model olasılığı - piyasa olasılığı. Pozitif ve büyükse model, piyasadan daha iyimser."""
+    if not pazar:
+        return None
+    return {k: model[k] - pazar[k] for k in ("ev", "beraberlik", "dep")}
