@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Futbol Analiz</title>
+<style>
+:root{--bg:#0f1720;--card:#18232f;--t:#e8eef4;--m:#8da0b3;--g:#2ecc71;--y:#f1c40f;--r:#e74c3c;--b:#3498db}
+@media(prefers-color-scheme:light){:root{--bg:#f3f6f9;--card:#fff;--t:#14202b;--m:#5b6b7b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:15px system-ui,sans-serif}
+header{padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+h1{font-size:18px;margin:0 auto 0 0}
+select,button{background:var(--card);color:var(--t);border:1px solid var(--m);border-radius:8px;padding:7px 12px;cursor:pointer}
+button.on{background:var(--b);border-color:var(--b);color:#fff}
+main{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:14px;padding:0 16px 24px}
+@media(max-width:760px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:12px}
+.mac{padding:10px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.mac:hover,.mac.sel{border-color:var(--b)}
+.mac .s{display:flex;justify-content:space-between;font-weight:600}
+.uyari{color:var(--y);font-size:12px;cursor:help;margin-left:4px}
+.muted{color:var(--m);font-size:13px}.live{color:var(--r);font-weight:700}
+.bar{display:flex;height:26px;border-radius:6px;overflow:hidden;margin:8px 0;font-size:12px;font-weight:700;color:#fff}
+.bar div{display:flex;align-items:center;justify-content:center;min-width:0}
+.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #8883}
+h2{font-size:15px;margin:0 0 8px}.big{font-size:30px;font-weight:800;text-align:center}
+.form span{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:4px;color:#fff;font-size:12px;margin-right:3px}
+</style></head><body>
+<header><h1>⚽ Futbol Analiz <span class="muted" id="kaynak"></span></h1>
+<select id="lig"><option value="">Tüm ligler</option></select><button id="bCanli" class="on">Canlı</button><button id="bBugun">Bugünkü maçlar</button></header>
+<main><div><div class="card" id="liste">Yükleniyor…</div></div><div id="detay"><div class="card muted">Soldan bir maç seç.</div></div></main>
+<script>
+let mod="canli",secili=null,lig="";
+const $=s=>document.querySelector(s),pct=x=>(x*100).toFixed(0)+"%";
+const renk={G:"var(--g)",B:"var(--y)",M:"var(--r)"};
+async function j(u){const r=await fetch(u);return r.json()}
+async function liste(){
+  const d=await j("/api/maclar?mod="+mod);$("#kaynak").textContent="("+d.kaynak+")";
+  if(d.hata){$("#liste").textContent="Hata: "+d.hata;return}
+  const ligler=[...new Set(d.maclar.map(m=>m.lig).filter(Boolean))].sort(),sel=$("#lig");
+  if(sel.options.length-1!==ligler.length){sel.innerHTML='<option value="">Tüm ligler</option>'+ligler.map(l=>`<option ${l===lig?"selected":""}>${l}</option>`).join("")}
+  const gor=d.maclar.filter(m=>!lig||m.lig===lig);
+  $("#liste").innerHTML=gor.length?gor.map(m=>`<div class="mac ${m.id===secili?"sel":""}" data-id="${m.id}">
+   <div class="s"><span>${m.ev}</span><span>${m.durum=="planli"?"–":m.skor[0]}</span></div>
+   <div class="s"><span>${m.dep}</span><span>${m.durum=="planli"?"–":m.skor[1]}</span></div>
+   <div class="muted">${m.lig||""}</div><div class="${m.durum=="canli"?"live":"muted"}">${m.durum=="canli"?"● CANLI "+(m.dakika||0)+"'":m.durum=="bitti"?"Bitti":"Başlamadı"}</div></div>`).join(""):'<span class="muted">Maç yok.</span>';
+  document.querySelectorAll(".mac").forEach(e=>e.onclick=()=>{secili=+e.dataset.id;detay();liste()});
+}
+function bar(a,b,c,l=["Ev","Ber.","Dep."]){return `<div class="bar"><div style="width:${a*100}%;background:var(--b)">${l[0]} ${pct(a)}</div><div style="width:${b*100}%;background:#7f8c8d">${l[1]} ${pct(b)}</div><div style="width:${c*100}%;background:var(--r)">${l[2]} ${pct(c)}</div></div>`}
+function formH(f){return `<span class="form">${f.map(x=>`<span style="background:${renk[x]}">${x}</span>`).join("")}</span>`}
+function blok(baslik,p){return `<div class="card"><h2>${baslik}</h2>${bar(p.ev,p.beraberlik,p.dep)}
+ <div class="row"><span>2.5 Üst / Alt</span><b>${pct(p.ust25)} / ${pct(p.alt25)}</b></div>
+ <div class="row"><span>Karşılıklı gol Var / Yok <span class="uyari" title="8 ligde yapılan backtestte KG tahmini, lig ortalamasını söylemekten belirgin şekilde iyi çıkmadı (bkz. BACKTEST_cok_lig.md). Bilgi amaçlı bakın.">⚠ düşük güvenilirlik</span></span><b>${pct(p.kg_var)} / ${pct(p.kg_yok)}</b></div>
+ <div class="row"><span>En olası skorlar</span><b>${p.skorlar.slice(0,4).map(s=>s.skor+" ("+pct(s.olasilik)+")").join(" · ")}</b></div></div>`}
+const f2=x=>x==null?"–":(+x).toFixed(2);
+const rolAd={forvet:"forvet",ortasaha:"orta saha",defans:"defans",kaleci:"kaleci"};
+function sakatKart(d){
+  const l=t=>(t.sakat||[]).map(s=>`${s.oyuncu} <span class="muted">(${rolAd[s.rol]||s.rol})</span>`).join(", ")||"Yok / veri yok";
+  return `<div class="card"><h2>Sakat / cezalı oyuncular</h2><div class="row"><span>${d.ev.ad}</span><span>${l(d.ev)}</span></div><div class="row"><span>${d.dep.ad}</span><span>${l(d.dep)}</span></div>
+  <div class="muted">Eksikler modele dahil edilir (hücum/savunma gücü azalır).</div></div>`}
+function piyasaKart(d){
+  if(!d.piyasa)return `<div class="card"><h2>Piyasa oranları</h2><span class="muted">Bu veri kaynağında oran yok.</span></div>`;
+  const o=d.oranlar,p=d.piyasa,m=d.mac_oncesi,dg=d.deger;
+  const s=(k,ad,ok)=>`<div class="row"><span>${ad} (oran ${o[ok]})</span><span>piyasa ${pct(p[k])} · model ${pct(m[k])} · <b style="color:${dg[k]>0.03?"var(--g)":dg[k]<-0.03?"var(--r)":"inherit"}">${dg[k]>=0?"+":""}${(dg[k]*100).toFixed(1)} puan</b></span></div>`;
+  return `<div class="card"><h2>Model - piyasa karşılaştırması</h2>${s("ev","Ev","ev")}${s("beraberlik","Beraberlik","ber")}${s("dep","Deplasman","dep")}
+  <div class="muted">Bahisçi marjı: %${(p.marj*100).toFixed(1)} (hesaptan çıkarıldı). Yeşil = model piyasadan daha iyimser; bu bir bahis tavsiyesi değildir.</div></div>`}
+async function detay(){
+  if(!secili)return;const d=await j("/api/analiz/"+secili);
+  if(d.hata){$("#detay").innerHTML='<div class="card">Hata: '+d.hata+'</div>';return}
+  const o=d.ozet,s=d.istatistik;
+  let h=`<div class="card"><div class="muted">${o.durum=="canli"?"● CANLI "+o.dakika+"'":o.durum}</div>
+   <div class="big">${d.ev.ad} ${o.durum=="planli"?"":o.skor[0]+" - "+o.skor[1]} ${d.dep.ad}</div>
+   <div class="row"><span>${d.ev.ad} form</span>${formH(d.ev.form)}</div>
+   <div class="row"><span>${d.dep.ad} form</span>${formH(d.dep.form)}</div>
+   <div class="row"><span>${d.ev.ad} genel / iç saha (atılan-yenilen)</span><b>${f2(d.ev.atilan)}-${f2(d.ev.yenilen)} / ${f2(d.ev.ev_atilan)}-${f2(d.ev.ev_yenilen)}</b></div>
+   <div class="row"><span>${d.dep.ad} genel / deplasman (atılan-yenilen)</span><b>${f2(d.dep.atilan)}-${f2(d.dep.yenilen)} / ${f2(d.dep.dep_atilan)}-${f2(d.dep.dep_yenilen)}</b></div></div>`;
+  h+=sakatKart(d);
+  if(d.canli)h+=blok("Canlı olasılıklar (kalan süre + skor)",d.canli);
+  if(s)h+=`<div class="card"><h2>Canlı istatistik</h2>
+   ${[["Şut",s.sut_ev,s.sut_dep],["İsabetli şut",s.isabetli_ev,s.isabetli_dep],["Korner",s.korner_ev,s.korner_dep]].map(r=>`<div class="row"><b>${r[1]}</b><span>${r[0]}</span><b>${r[2]}</b></div>`).join("")}
+   <div class="row"><b>%${s.topla_oynama_ev}</b><span>Topla oynama</span><b>%${100-s.topla_oynama_ev}</b></div>
+   <div class="row"><b>${d.kirmizi[0]}</b><span>Kırmızı kart</span><b>${d.kirmizi[1]}</b></div></div>`;
+  h+=blok("Maç öncesi analiz (Poisson modeli)",d.mac_oncesi);
+  h+=`<div class="card"><h2>Beklenen goller (xG benzeri)</h2><div class="row"><span>${d.ev.ad}</span><b>${d.mac_oncesi.beklenen_ev.toFixed(2)}</b></div><div class="row"><span>${d.dep.ad}</span><b>${d.mac_oncesi.beklenen_dep.toFixed(2)}</b></div></div>`;
+  h+=piyasaKart(d);
+  h+=`<div class="card"><h2>Son karşılaşmalar</h2>${d.h2h.length?d.h2h.map(x=>`<div class="row">${x}</div>`).join(""):'<span class="muted">Veri yok</span>'}</div>
+   <div class="muted">Olasılıklar istatistiksel tahmindir, kesin sonuç değildir.</div>`;
+  $("#detay").innerHTML=h;
+}
+$("#lig").onchange=e=>{lig=e.target.value;liste()};
+$("#bCanli").onclick=()=>{mod="canli";$("#bCanli").className="on";$("#bBugun").className="";liste()};
+$("#bBugun").onclick=()=>{mod="bugun";$("#bBugun").className="on";$("#bCanli").className="";liste()};
+liste();setInterval(()=>{liste();if(secili)detay()},5000);
+</script></body></html>
