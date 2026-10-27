@@ -225,3 +225,116 @@ Her hafta 1 uzun video + 1-2 kısa (Shorts, 15-30 sn şarkı kesiti).
 5. Müzik ve efekt ekle
 6. Başka birine izlet (mümkünse bir çocuğa), tempo ve ses seviyesini ayarla
 7. Yükle ve yayınla
+
+---
+
+# EK: Bölüm 5-8
+
+Aynı sabit yapı geçerli: selamlama → konu → soru-bekleme-cevap → şarkı → kutlama ve veda. Görsel komutlarında `[stil eki]` bölüm 5'teki ortak stil ekidir.
+
+## Bölüm 5 — Meyve ve Sebzeleri Tanıyalım (~3 dk 30 sn)
+
+| Süre | Sahne | Anlatım |
+|---|---|---|
+| 0:00-0:20 | Pıtır'ın bahçesi, sepetle gelir | "Merhaba! Ben Pıtır! Bugün bahçeden meyve ve sebze toplayacağız. Sepetim hazır!" |
+| 0:20-0:55 | Muz ağacı | "Bu ne? Muz! Muz ne renk? Sarı! Muzun tadı tatlı. Mmm!" |
+| 0:55-1:30 | Çilek tarlası | "Bu ne? Çilek! Çilek kırmızı. Küçük küçük, tatlı tatlı!" |
+| 1:30-2:05 | Havuç toprağın altından çıkar | "Bu ne? Havuç! Havuç turuncu. Pıtır havucu çok sever! Kıtır kıtır!" |
+| 2:05-2:40 | Domates asma | "Bu ne? Domates! Domates kırmızı ve yuvarlak." |
+| 2:40-3:10 | Meyve-sebze şarkısı, sepet dolar | Şarkı |
+| 3:10-3:30 | Cik sepete bakar, kutlama | "Sepetimiz dolu! Aferin sana! Hoşça kal!" |
+
+**Şarkı** (hafif, zıplayan ritim)
+> Muz muz sarı muz, çilek çilek kırmızı,
+> Havuç havuç turuncu, domates domates yuvarlak!
+> Sepetim dolu, hepsi lezzetli,
+> Mmm mmm mmm, afiyet olsun!
+
+**Görsel komutları**
+1. Pitir the bunny holding a wicker basket in a sunny vegetable garden, [stil eki]
+2. A banana tree with ripe yellow bananas, Pitir pointing, [stil eki]
+3. Strawberry field with big red strawberries, Cik standing on a leaf, [stil eki]
+4. Pitir pulling an orange carrot from the soil, [stil eki]
+5. Red tomato vine with round tomatoes, [stil eki]
+6. Basket full of banana, strawberry, carrot and tomato, Pitir and Cik cheering, [stil eki]
+
+## Bölüm 6 — Vücudumuzu Tanıyalım (~3 dk 30 sn)
+
+| Süre | Sahne | Anlatım |
+|---|---|---|
+| 0:00-0:20 | Pıtır ayna karşısında | "Merhaba! Ben Pıtır! Bugün vücudumuzu tanıyacağız. Aynaya bak!" |
+| 0:20-0:55 | Gözler, Pıtır göz kırpar | "Bunlar gözler! Gözlerle görürüz. Sen de gözlerini kapat... aç!" |
+| 0:55-1:30 | Kulaklar, kulaklar oynar | "Bunlar kulaklar! Kulakla dinleriz. Dinle... cik cik cik!" |
+| 1:30-2:05 | Eller, Pıtır alkışlar | "Bunlar eller! Ellerle alkışlarız. Çıt çıt çıt!" |
+| 2:05-2:40 | Ayaklar, Pıtır zıplar | "Bunlar ayaklar! Ayaklarla zıplarız. Zıp zıp zıp!" |
+| 2:40-3:15 | Hareketli şarkı, çocuğu taklide davet | Şarkı |
+| 3:15-3:30 | Kutlama | "Harikasın! Hoşça kal!" |
+
+**Şarkı** (yavaş başlayıp hızlanan, hareketli)
+> Gözlerim gözlerim, bakar bakar,
+> Kulaklarım dinler, dinler dinler,
+> Ellerim çırp çırp, alkış yapar,
+> Ayaklarım zıp zıp, zıp zıp zıplar!
+
+**Görsel komutları**
+1. Pitir the bunny standing in front of a mirror, smiling, [stil eki]
+2. Close-up of Pitir's big friendly eyes blinking, [stil eki]
+3. Pitir with long ears wiggling, Cik whispering nearby, [stil eki]
+4. Pitir clapping hands with small sparkles, [stil eki]
+5. Pitir jumping in the air, feet highlighted, [stil eki]
+
+## Bölüm 7 — Zıt Kavramlar: Büyük-Küçük, Açık-Kapalı (~3 dk 30 sn)
+
+| Süre | Sahne | Anlatım |
+|---|---|---|
+| 0:00-0:20 | Oyuncak odası | "Merhaba! Ben Pıtır! Bugün zıtları öğreneceğiz!" |
+| 0:20-0:55 | Büyük balon ve küçük balon | "Bu balon büyük! Bu balon küçük! Büyük... küçük!" |
+| 0:55-1:30 | Büyük fil ve küçük fare (oyuncak) | "Büyük fil! Küçük fare! Sen göster: büyük, küçük!" |
+| 1:30-2:05 | Kapı açık, kapı kapalı | "Kapı açık! Kapı kapalı! Açık... kapalı!" |
+| 2:05-2:40 | Uzun zürafa, kısa kaplumbağa | "Uzun zürafa! Kısa kaplumbağa!" |
+| 2:40-3:10 | Zıtlar şarkısı | Şarkı |
+| 3:10-3:30 | Kutlama | "Aferin! Hoşça kal!" |
+
+**Şarkı** (soru-cevap formunda)
+> Büyük büyük, kollarını aç!
+> Küçük küçük, kendini topla!
+> Açık açık, kapıyı aç,
+> Kapalı kapalı, kapıyı kapat!
+
+**Görsel komutları**
+1. Cozy playroom with toys, Pitir holding two balloons, one big one small, [stil eki]
+2. Big toy elephant next to a tiny toy mouse, [stil eki]
+3. An open door and a closed door side by side, Pitir between them, [stil eki]
+4. Tall toy giraffe and short toy turtle, [stil eki]
+
+## Bölüm 8 — Günaydın ve İyi Geceler Rutini (~4 dk)
+
+Sakin, yumuşak tempolu bölüm. İkinci yarısı uyku öncesi kullanım için yavaş ve loş renklerle.
+
+| Süre | Sahne | Anlatım |
+|---|---|---|
+| 0:00-0:25 | Sabah, güneş doğar, Pıtır uyanır | "Günaydın! Ben Pıtır! Yeni bir gün başladı!" |
+| 0:25-1:00 | Diş fırçalama | "Önce dişlerimizi fırçalıyoruz. Yukarı aşağı, yukarı aşağı!" |
+| 1:00-1:35 | Yüz yıkama, kahvaltı | "Sonra yüzümüzü yıkıyoruz. Şapır şapır! Kahvaltı da yapıyoruz!" |
+| 1:35-2:10 | Gün içi: oyun, bahçe | "Gün boyunca oynadık, öğrendik, güldük!" |
+| 2:10-2:50 | Akşam, güneş batar, pijama | "Akşam oldu. Güneş uyuyor. Pijamamızı giyiyoruz." |
+| 2:50-3:30 | Yatak, ay ve yıldızlar, ninni | Ninni |
+| 3:30-4:00 | Pıtır esner, gözlerini kapatır | "İyi geceler. Yarın görüşürüz..." |
+
+**Ninni** (çok yavaş, kutu müziği tonu)
+> Ay ay ay, ay doğdu,
+> Yıldızlar parlıyor,
+> Pıtır uyuyor, Cik uyuyor,
+> Sen de uyu, iyi geceler.
+
+**Görsel komutları**
+1. Pitir waking up in a small bed with warm morning sunlight, [stil eki]
+2. Pitir brushing teeth with a tiny toothbrush, bathroom sink, [stil eki]
+3. Pitir and Cik having breakfast at a small table, [stil eki]
+4. Evening garden with orange sunset, Pitir yawning, [stil eki]
+5. Pitir in pajamas in bed, moon and stars through the window, soft blue night colors, calm, [stil eki]
+
+## Ek Üretim Notları
+- Bölüm 8'de müziği daha yavaş (60-70 BPM) tut, sesi alçalt, ani sesli efekt kullanma.
+- Bölüm 6'da çocuğun taklit edebilmesi için hareketlerden sonra 2-3 sn boşluk bırak.
+- Bölüm 7'de zıt çiftleri hep aynı sırayla göster: önce "büyük", sonra "küçük".
