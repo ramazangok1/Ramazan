@@ -3,6 +3,8 @@ import os
 import time
 import requests
 
+import analysis
+
 # Ücretsiz API planlarında günlük/dakikalık istek sınırı vardır; yanıtlar bu sürelerle (sn) önbelleğe alınır.
 # Canlı veri için CANLI_TTL ortam değişkeniyle süre uzatılabilir (API-Football ücretsiz planı: günde 100 istek -> 300 önerilir).
 CANLI_TTL = int(os.environ.get("CANLI_TTL", "60"))
@@ -42,6 +44,24 @@ class _Onbellekli:
         return veri
 
 
+def _t(ad, a, y, form, sakat=None):
+    """Demo takımı: genel ortalamadan iç saha/deplasman ortalamalarını türetir."""
+    t = {"ad": ad, "atilan": a, "yenilen": y, "n": 30, "ev_n": 15, "dep_n": 15,
+         "ev_atilan": round(a * 1.1, 2), "ev_yenilen": round(y * 0.85, 2),
+         "dep_atilan": round(a * 0.9, 2), "dep_yenilen": round(y * 1.15, 2),
+         "form": [{"G": "G", "B": "B", "M": "M"}[c] for c in form]}
+    if sakat:
+        t["sakat"] = sakat
+    return t
+
+
+def _m(id, lig, ev, dep, bas, olaylar, kirmizi, oran):
+    """olaylar/kirmizi: [(dakika, 0=ev | 1=deplasman)]"""
+    taraf = lambda l: [(d, "ev" if k == 0 else "dep") for d, k in l]
+    return {"id": id, "lig": lig, "ev": ev, "dep": dep, "baslangic": bas, "olaylar": taraf(olaylar), "kirmizi": taraf(kirmizi),
+            "oranlar": {"ev": oran[0], "ber": oran[1], "dep": oran[2]}}
+
+
 class DemoProvider:
     """Gerçek API anahtarı olmadan arayüzü denemek için uydurma veri.
     Canlı maçlar saniyeyi dakika sayarak ilerler (1 sn = 1 dk)."""
@@ -51,15 +71,39 @@ class DemoProvider:
         "GS": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Galatasaray", "atilan": 2.1, "yenilen": 0.8, "ev_atilan": 2.4, "ev_yenilen": 0.6, "dep_atilan": 1.8, "dep_yenilen": 1.0, "form": ["G", "G", "B", "G", "G"]},
         "FB": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Fenerbahçe", "atilan": 2.0, "yenilen": 0.9, "ev_atilan": 2.3, "ev_yenilen": 0.7, "dep_atilan": 1.7, "dep_yenilen": 1.1, "form": ["G", "B", "G", "G", "M"],
                "sakat": [{"oyuncu": "Forvet A", "rol": "forvet"}, {"oyuncu": "Defans B", "rol": "defans"}]},
-        "BJK": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Beşiktaş", "atilan": 1.6, "yenilen": 1.2, "form": ["M", "G", "B", "G", "B"]},
-        "TS": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Trabzonspor", "atilan": 1.5, "yenilen": 1.3, "form": ["B", "M", "G", "B", "M"]},
-        "BS": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Başakşehir", "atilan": 1.3, "yenilen": 1.1, "form": ["G", "B", "B", "M", "G"]},
-        "KON": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Konyaspor", "atilan": 1.0, "yenilen": 1.6, "form": ["M", "M", "B", "G", "M"]},
+        "BJK": _t("Beşiktaş", 1.6, 1.2, "MGBGB"),
+        "TS": _t("Trabzonspor", 1.5, 1.3, "BMGBM"),
+        "BS": _t("Başakşehir", 1.3, 1.1, "GBBMG"),
+        "KON": _t("Konyaspor", 1.0, 1.6, "MMBGM"),
+        "MCI": _t("Manchester City", 2.3, 0.8, "GGGBG"), "ARS": _t("Arsenal", 2.0, 0.8, "GBGGG"),
+        "LIV": _t("Liverpool", 2.1, 1.0, "GGMGB"), "CHE": _t("Chelsea", 1.6, 1.2, "BGMBG"),
+        "RMA": _t("Real Madrid", 2.2, 0.9, "GGBGG"), "BAR": _t("Barcelona", 2.3, 1.0, "GMGGB"),
+        "ATM": _t("Atlético Madrid", 1.6, 0.8, "GBGBG"), "SEV": _t("Sevilla", 1.2, 1.4, "MBMGB"),
+        "FCB": _t("Bayern Münih", 2.8, 1.0, "GGGBG", [{"oyuncu": "Kaleci C", "rol": "kaleci"}]), "BVB": _t("Dortmund", 2.0, 1.4, "GMGBG"),
+        "B04": _t("Leverkusen", 2.2, 1.0, "GGBGG"), "RBL": _t("Leipzig", 1.9, 1.1, "BGGMB"),
+        "INT": _t("Inter", 2.0, 0.8, "GGBGG"), "MIL": _t("Milan", 1.6, 1.0, "BGGMB"),
+        "JUV": _t("Juventus", 1.4, 0.8, "BBGBG"), "NAP": _t("Napoli", 1.7, 1.1, "GMBGG"),
+        "PSG": _t("Paris SG", 2.4, 0.9, "GGGGB"), "OM": _t("Marseille", 1.7, 1.2, "MGBGM"),
+        "SCP": _t("Sporting", 2.2, 0.8, "GGGBG"), "BEN": _t("Benfica", 2.1, 0.9, "GBGGM"),
     }
+    # Ligin maç başı ortalama gol (ev, deplasman). Örnek değerlerdir.
+    LIG_ORT = {"Süper Lig": (1.55, 1.22), "1. Lig": (1.45, 1.15), "Premier League": (1.55, 1.25),
+               "La Liga": (1.40, 1.05), "Bundesliga": (1.75, 1.40), "Serie A": (1.45, 1.15),
+               "Ligue 1": (1.50, 1.20), "Liga Portugal": (1.45, 1.10)}
     MACLAR = [
-        {"id": 1, "lig": "Süper Lig", "oranlar": {"ev": 2.30, "ber": 3.40, "dep": 3.00}, "ev": "GS", "dep": "FB", "baslangic": 0, "olaylar": [(12, "ev"), (38, "dep"), (67, "ev")], "kirmizi": [(55, "dep")]},
-        {"id": 2, "lig": "Süper Lig", "oranlar": {"ev": 2.10, "ber": 3.50, "dep": 3.40}, "ev": "BJK", "dep": "TS", "baslangic": 30, "olaylar": [(30, "dep"), (71, "ev")], "kirmizi": []},
-        {"id": 3, "lig": "1. Lig", "oranlar": {"ev": 1.80, "ber": 3.60, "dep": 4.50}, "ev": "BS", "dep": "KON", "baslangic": None, "olaylar": [], "kirmizi": []},
+        _m(1, "Süper Lig", "GS", "FB", 0, [(12, 0), (38, 1), (67, 0)], [(55, 1)], (2.30, 3.40, 3.00)),
+        _m(2, "Süper Lig", "BJK", "TS", 30, [(30, 1), (71, 0)], [], (2.10, 3.50, 3.40)),
+        _m(3, "1. Lig", "BS", "KON", None, [], [], (1.80, 3.60, 4.50)),
+        _m(4, "Premier League", "MCI", "ARS", 10, [(23, 0), (80, 1)], [], (2.10, 3.60, 3.40)),
+        _m(5, "Premier League", "LIV", "CHE", None, [], [], (1.75, 3.90, 4.40)),
+        _m(6, "La Liga", "RMA", "BAR", 40, [(9, 1), (51, 0), (88, 0)], [(70, 1)], (2.30, 3.70, 2.95)),
+        _m(7, "La Liga", "ATM", "SEV", 70, [(33, 0)], [], (1.60, 3.80, 5.50)),
+        _m(8, "Bundesliga", "FCB", "BVB", 20, [(5, 0), (18, 0), (60, 1)], [], (1.40, 5.00, 6.50)),
+        _m(9, "Bundesliga", "B04", "RBL", None, [], [], (1.95, 3.90, 3.50)),
+        _m(10, "Serie A", "INT", "MIL", 50, [(44, 1), (75, 0)], [], (1.85, 3.50, 4.30)),
+        _m(11, "Serie A", "JUV", "NAP", None, [], [], (2.50, 3.10, 3.00)),
+        _m(12, "Ligue 1", "PSG", "OM", 60, [(14, 0), (30, 0)], [], (1.35, 5.00, 7.50)),
+        _m(13, "Liga Portugal", "SCP", "BEN", 85, [(40, 1)], [], (1.85, 3.60, 4.10)),
     ]
     H2H = {frozenset(["GS", "FB"]): ["GS 2-1", "FB 1-1", "FB 3-2", "GS 0-0", "GS 3-1"]}
 
@@ -104,7 +148,7 @@ class DemoProvider:
                        sum(1 for dk, k in m["kirmizi"] if dk <= d and k == "dep"))
         h2h = self.H2H.get(frozenset([m["ev"], m["dep"]]), [])
         return {"ozet": ozet, "ev": ev, "dep": dep, "istatistik": stat, "kirmizi": kirmizi, "h2h": h2h,
-                "oranlar": m["oranlar"]}
+                "oranlar": m["oranlar"], "lig_ort": self.LIG_ORT[m["lig"]]}
 
 
 class ApiFootballProvider(_Onbellekli):
@@ -122,7 +166,7 @@ class ApiFootballProvider(_Onbellekli):
         if yol == "/fixtures":
             return CANLI_TTL if ("live" in params or "id" in params) else 300
         return {"/fixtures/statistics": CANLI_TTL, "/teams/statistics": 43200, "/injuries": 1800,
-                "/odds": 900, "/fixtures/headtohead": 86400}.get(yol, 300)
+                "/odds": 900, "/fixtures/headtohead": 86400, "/standings": 43200}.get(yol, 300)
 
     def _al(self, yol, params):
         r = self.s.get(self.BASE + yol, params=params, timeout=15)
@@ -165,6 +209,19 @@ class ApiFootballProvider(_Onbellekli):
         return {"ad": ad, "atilan": atilan, "yenilen": yenilen, "form": form, "n": oynanan,
                 "ev_atilan": ort("home", "for"), "ev_yenilen": ort("home", "against"), "ev_n": oyn.get("home") or 0,
                 "dep_atilan": ort("away", "for"), "dep_yenilen": ort("away", "against"), "dep_n": oyn.get("away") or 0}
+
+    def _lig_ort(self, lig, sezon):
+        """Puan durumundan ligin maç başı ev/deplasman gol ortalaması."""
+        try:
+            veri = self._get("/standings", league=lig, season=sezon)
+            eg = em = dg = dm = 0
+            for grup in veri[0]["league"]["standings"]:
+                for r in grup:
+                    eg += r["home"]["goals"]["for"] or 0; em += r["home"]["played"] or 0
+                    dg += r["away"]["goals"]["for"] or 0; dm += r["away"]["played"] or 0
+            return analysis.lig_ortalama(eg, em, dg, dm)
+        except Exception:
+            return None  # puan durumu yoksa (ör. kupa) model varsayılan ortalamayı kullanır
 
     ROLLER = {"Attacker": "forvet", "Midfielder": "ortasaha", "Defender": "defans", "Goalkeeper": "kaleci"}
 
@@ -216,7 +273,7 @@ class ApiFootballProvider(_Onbellekli):
             h2h.append(f"{x['teams']['home']['name']} {x['goals']['home']}-{x['goals']['away']} {x['teams']['away']['name']}")
         return {"ozet": {k: v for k, v in o.items() if not k.startswith("_")},
                 "ev": ev, "dep": dep, "istatistik": stat, "kirmizi": kirmizi, "h2h": h2h,
-                "oranlar": self._oranlar(mac_id)}
+                "oranlar": self._oranlar(mac_id), "lig_ort": self._lig_ort(o["_lig"], o["_sezon"])}
 
 
 class FootballDataProvider(_Onbellekli):
@@ -290,4 +347,9 @@ class FootballDataProvider(_Onbellekli):
                 h2h.append(f"{x['homeTeam']['name']} {ft['home']}-{ft['away']} {x['awayTeam']['name']}")
         except Exception:
             pass
-        return {"ozet": o, "ev": ev, "dep": dep, "istatistik": None, "kirmizi": (0, 0), "h2h": h2h, "oranlar": None}
+        t = self._puan_durumu(kod)
+        ev_s, dep_s = t.get("HOME", {}).values(), t.get("AWAY", {}).values()
+        lig_ort = analysis.lig_ortalama(sum(r["goalsFor"] for r in ev_s), sum(r["playedGames"] for r in ev_s),
+                                        sum(r["goalsFor"] for r in dep_s), sum(r["playedGames"] for r in dep_s))
+        return {"ozet": o, "ev": ev, "dep": dep, "istatistik": None, "kirmizi": (0, 0), "h2h": h2h,
+                "oranlar": None, "lig_ort": lig_ort}

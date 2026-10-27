@@ -166,6 +166,17 @@ def canli(ev, dep, dakika, skor, kirmizi=(0, 0), istatistik=None, lig=None, beta
     return sonuc
 
 
+def lig_ortalama(ev_gol, ev_mac, dep_gol, dep_mac, k=30):
+    """Ligin maç başı ev/deplasman gol ortalaması (puan durumundan).
+
+    Sezon başında az maç varken varsayılan ortalamaya doğru daraltılır."""
+    n = min(ev_mac, dep_mac)
+    if n <= 0:
+        return None
+    ev, dep = ev_gol / ev_mac, dep_gol / dep_mac
+    return ((n * ev + k * LIG_ORT_EV) / (n + k), (n * dep + k * LIG_ORT_DEP) / (n + k))
+
+
 def piyasa(oranlar):
     """Ondalık oranlardan marjı arındırılmış olasılıklar. oranlar={'ev':1.9,'ber':3.4,'dep':4.2}"""
     if not oranlar:

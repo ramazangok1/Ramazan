@@ -67,14 +67,16 @@ def analiz_et(mac_id):
     o = d["ozet"]
     cikti = {"ozet": o, "ev": d["ev"], "dep": d["dep"], "h2h": d["h2h"],
              "istatistik": d["istatistik"], "kirmizi": d["kirmizi"],
-             "mac_oncesi": analysis.mac_oncesi(d["ev"], d["dep"])}
+             "lig_ort": d.get("lig_ort"),
+             "mac_oncesi": analysis.mac_oncesi(d["ev"], d["dep"], d.get("lig_ort"))}
     pazar = analysis.piyasa(d.get("oranlar"))
     cikti["piyasa"] = pazar
     cikti["oranlar"] = d.get("oranlar")
     cikti["deger"] = analysis.deger(cikti["mac_oncesi"], pazar)
     if o["durum"] == "canli":
         cikti["canli"] = analysis.canli(d["ev"], d["dep"], o["dakika"] or 0,
-                                        tuple(o["skor"]), tuple(d["kirmizi"]), d["istatistik"])
+                                        tuple(o["skor"]), tuple(d["kirmizi"]), d["istatistik"],
+                                        lig=d.get("lig_ort"))
     return cikti
 
 

@@ -22,6 +22,12 @@ FOOTBALL_DATA_KEY=xxxx python server.py # football-data.org (skor, puan durumu, 
 - **Sakatlıklar**: eksik forvet/orta saha/defans/kaleci modelin hücum-savunma gücünü düşürür (API-Football)
 - **Oranlar**: bahisçi marjı çıkarılmış piyasa olasılığı ile model karşılaştırması (API-Football)
 
+## Ligler
+- **API-Football** bütün ligleri verir; liste ve lig filtresi otomatik dolar. Hangi liglerin açık olduğu planına bağlıdır.
+- **football-data.org** yalnızca planındaki ligleri verir (ücretsiz planda 12 lig).
+- **Lig gol ortalaması:** Model, her maç için ligin kendi ev/deplasman gol ortalamasını puan durumundan hesaplar (sezon başında az maç varsa varsayılana doğru daraltılır). Puan durumu olmayan yarışmalarda (kupa gibi) varsayılan ortalama kullanılır.
+- **Demo:** 8 ligden 13 örnek maç (Süper Lig, 1. Lig, Premier League, La Liga, Bundesliga, Serie A, Ligue 1, Liga Portugal).
+
 ## Ücretsiz kullanım
 **1) Hiçbir hesap olmadan:** `python server.py` demo veriyle çalışır; tarayıcı sürümü de ücretsizdir.
 

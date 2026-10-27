@@ -70,6 +70,7 @@ async function detay(){
    <div class="big">${d.ev.ad} ${o.durum=="planli"?"":o.skor[0]+" - "+o.skor[1]} ${d.dep.ad}</div>
    <div class="row"><span>${d.ev.ad} form</span>${formH(d.ev.form)}</div>
    <div class="row"><span>${d.dep.ad} form</span>${formH(d.dep.form)}</div>
+   ${d.lig_ort?`<div class="row"><span>Lig gol ortalaması (ev / deplasman)</span><b>${f2(d.lig_ort[0])} / ${f2(d.lig_ort[1])}</b></div>`:""}
    <div class="row"><span>${d.ev.ad} genel / iç saha (atılan-yenilen)</span><b>${f2(d.ev.atilan)}-${f2(d.ev.yenilen)} / ${f2(d.ev.ev_atilan)}-${f2(d.ev.ev_yenilen)}</b></div>
    <div class="row"><span>${d.dep.ad} genel / deplasman (atılan-yenilen)</span><b>${f2(d.dep.atilan)}-${f2(d.dep.yenilen)} / ${f2(d.dep.dep_atilan)}-${f2(d.dep.dep_yenilen)}</b></div></div>`;
   h+=sakatKart(d);
