@@ -22,6 +22,20 @@ FOOTBALL_DATA_KEY=xxxx python server.py # football-data.org (skor, puan durumu, 
 - **Sakatlıklar**: eksik forvet/orta saha/defans/kaleci modelin hücum-savunma gücünü düşürür (API-Football)
 - **Oranlar**: bahisçi marjı çıkarılmış piyasa olasılığı ile model karşılaştırması (API-Football)
 
+## Ücretsiz kullanım
+**1) Hiçbir hesap olmadan:** `python server.py` demo veriyle çalışır; tarayıcı sürümü de ücretsizdir.
+
+**2) Gerçek veri, ücretsiz planlarla**
+- *API-Football* ücretsiz plan (api-football.com, kayıt gerekir): günde 100 istek. Tüm özellikler (istatistik, sakatlık, oran) bu kaynakta.
+  Kotayı korumak için yanıtlar önbelleğe alınır; `CANLI_TTL=300 GUNLUK_LIMIT=90 APIFOOTBALL_KEY=... python server.py` önerilir.
+- *football-data.org* ücretsiz plan: dakikada 10 istek, sınırlı lig seti; yalnızca skor, puan durumu ve H2H gelir.
+- Hangi liglerin/sezonların ücretsiz planda açık olduğunu kendi hesabında kontrol et; planlar değişebilir.
+
+**3) Ücretsiz barındırma (Render.com):** depo kökündeki `render.yaml` hazır.
+Render'da hesap aç → *New → Blueprint* → bu depoyu seç → (isteğe bağlı) API anahtarını `APIFOOTBALL_KEY` olarak gir.
+Anahtar girmezsen sunucu demo veriyle açılır. Ücretsiz örnek, bir süre kullanılmayınca uyur ve ilk açılış ~1 dk sürebilir.
+Sunucu herkese açık olacağı için `GUNLUK_LIMIT` ayarı anahtarının kotasını korur.
+
 ## Backtest
 ```bash
 python backtest.py --lig tr.1   # Süper Lig; veriyi indirir (github), BACKTEST_tr.1.md yazar

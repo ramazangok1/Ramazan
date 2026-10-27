@@ -88,5 +88,5 @@ async function detay(){
 $("#lig").onchange=e=>{lig=e.target.value;liste()};
 $("#bCanli").onclick=()=>{mod="canli";$("#bCanli").className="on";$("#bBugun").className="";liste()};
 $("#bBugun").onclick=()=>{mod="bugun";$("#bBugun").className="on";$("#bCanli").className="";liste()};
-liste();setInterval(()=>{liste();if(secili)detay()},5000);
+liste();setInterval(()=>{if(document.hidden)return;liste();if(secili)detay()},5000);
 </script></body></html>

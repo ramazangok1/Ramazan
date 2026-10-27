@@ -1,0 +1,19 @@
+# Render.com ücretsiz web servisi (Blueprint). Depo kökünde olmalı.
+services:
+  - type: web
+    name: futbol-analiz
+    runtime: python
+    plan: free
+    rootDir: futbol-analiz
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      # İkisi de boş bırakılırsa uygulama demo veriyle çalışır (hiçbir hesap/anahtar gerekmez).
+      - key: APIFOOTBALL_KEY
+        sync: false
+      - key: FOOTBALL_DATA_KEY
+        sync: false
+      - key: CANLI_TTL        # canlı veri önbellek süresi (sn); ücretsiz kotayı korur
+        value: "300"
+      - key: GUNLUK_LIMIT     # günde API'ye en fazla bu kadar istek
+        value: "90"

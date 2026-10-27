@@ -1,6 +1,45 @@
 """Veri kaynakları: DemoProvider (anahtarsız) ve ApiFootballProvider (api-sports.io v3)."""
+import os
 import time
 import requests
+
+# Ücretsiz API planlarında günlük/dakikalık istek sınırı vardır; yanıtlar bu sürelerle (sn) önbelleğe alınır.
+# Canlı veri için CANLI_TTL ortam değişkeniyle süre uzatılabilir (API-Football ücretsiz planı: günde 100 istek -> 300 önerilir).
+CANLI_TTL = int(os.environ.get("CANLI_TTL", "60"))
+# Günde API'ye gidecek en fazla istek (0 = sınırsız). Herkese açık sunucuda ücretsiz kotanın tükenmesini önler.
+GUNLUK_LIMIT = int(os.environ.get("GUNLUK_LIMIT", "0"))
+
+
+class _Onbellekli:
+    """Aynı istek TTL süresi içinde tekrarlanırsa API'ye gitmeden önceki yanıtı döner."""
+
+    def _init_onbellek(self):
+        self._c = {}
+        self.istek_sayisi = 0   # gerçekten API'ye giden istekler
+        self._gun = (time.strftime("%Y-%m-%d"), 0)
+
+    def _ttl(self, yol, params):
+        raise NotImplementedError
+
+    def _al(self, yol, params):
+        raise NotImplementedError
+
+    def _get(self, yol, **params):
+        anahtar = (yol, tuple(sorted(params.items())))
+        simdi = time.time()
+        hit = self._c.get(anahtar)
+        if hit and simdi - hit[0] < self._ttl(yol, params):
+            return hit[1]
+        bugun, adet = self._gun
+        if bugun != time.strftime("%Y-%m-%d"):
+            bugun, adet = time.strftime("%Y-%m-%d"), 0
+        if GUNLUK_LIMIT and adet >= GUNLUK_LIMIT:
+            raise RuntimeError(f"Günlük istek limiti ({GUNLUK_LIMIT}) doldu; yarın tekrar dene ya da önbellekteki veriyle devam et.")
+        veri = self._al(yol, params)
+        self._gun = (bugun, adet + 1)
+        self.istek_sayisi += 1
+        self._c[anahtar] = (simdi, veri)
+        return veri
 
 
 class DemoProvider:
@@ -68,7 +107,7 @@ class DemoProvider:
                 "oranlar": m["oranlar"]}
 
 
-class ApiFootballProvider:
+class ApiFootballProvider(_Onbellekli):
     """https://www.api-football.com (v3). Anahtar: APIFOOTBALL_KEY ortam değişkeni.
     NOT: Gerçek API ile henüz test edilmedi; alan adları dokümana göre yazıldı."""
     ad = "api-football"
@@ -77,11 +116,21 @@ class ApiFootballProvider:
     def __init__(self, anahtar):
         self.s = requests.Session()
         self.s.headers["x-apisports-key"] = anahtar
+        self._init_onbellek()
 
-    def _get(self, yol, **params):
+    def _ttl(self, yol, params):
+        if yol == "/fixtures":
+            return CANLI_TTL if ("live" in params or "id" in params) else 300
+        return {"/fixtures/statistics": CANLI_TTL, "/teams/statistics": 43200, "/injuries": 1800,
+                "/odds": 900, "/fixtures/headtohead": 86400}.get(yol, 300)
+
+    def _al(self, yol, params):
         r = self.s.get(self.BASE + yol, params=params, timeout=15)
         r.raise_for_status()
-        return r.json().get("response", [])
+        j = r.json()
+        if j.get("errors"):  # API 200 döner ama kota/anahtar hatasını burada bildirir
+            raise RuntimeError("API-Football: " + str(j["errors"]))
+        return j.get("response", [])
 
     def _ozet(self, f):
         kisa = f["fixture"]["status"]["short"]
@@ -170,7 +219,7 @@ class ApiFootballProvider:
                 "oranlar": self._oranlar(mac_id)}
 
 
-class FootballDataProvider:
+class FootballDataProvider(_Onbellekli):
     """https://www.football-data.org (v4). Anahtar: FOOTBALL_DATA_KEY ortam değişkeni.
     Ücretsiz planda canlı istatistik, sakatlık ve oran yoktur; skor, dakika'sız durum,
     puan durumundan gol ortalamaları ve H2H gelir. Gerçek API ile test edilmedi."""
@@ -181,9 +230,14 @@ class FootballDataProvider:
     def __init__(self, anahtar):
         self.s = requests.Session()
         self.s.headers["X-Auth-Token"] = anahtar
-        self._tablo = {}
+        self._init_onbellek()
 
-    def _get(self, yol, **params):
+    def _ttl(self, yol, params):
+        if "/standings" in yol:
+            return 3600
+        return 86400 if "head2head" in yol else CANLI_TTL
+
+    def _al(self, yol, params):
         r = self.s.get(self.BASE + yol, params=params, timeout=15)
         r.raise_for_status()
         return r.json()
@@ -201,12 +255,10 @@ class FootballDataProvider:
         return [m for m in o if m["durum"] == "canli"] if mod == "canli" else o
 
     def _puan_durumu(self, kod):
-        if kod not in self._tablo:
-            satirlar = {}
-            for blok in self._get(f"/competitions/{kod}/standings")["standings"]:
-                satirlar.setdefault(blok["type"], {}).update({r["team"]["id"]: r for r in blok["table"]})
-            self._tablo[kod] = satirlar
-        return self._tablo[kod]
+        satirlar = {}
+        for blok in self._get(f"/competitions/{kod}/standings")["standings"]:
+            satirlar.setdefault(blok["type"], {}).update({r["team"]["id"]: r for r in blok["table"]})
+        return satirlar
 
     def _takim(self, tid, kod, ic_saha, ad):
         t = self._puan_durumu(kod)
