@@ -25,7 +25,7 @@ h2{font-size:15px;margin:0 0 8px}.big{font-size:30px;font-weight:800;text-align:
 .form span{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:4px;color:#fff;font-size:12px;margin-right:3px}
 </style></head><body>
 <header><h1>⚽ Futbol Analiz <span class="muted" id="kaynak"></span></h1>
-<select id="lig"><option value="">Tüm ligler</option></select><button id="bCanli" class="on">Canlı</button><button id="bBugun">Bugünkü maçlar</button></header>
+<select id="lig"><option value="">Tüm ligler</option></select><a class="sub" href="/api/durum" target="_blank" rel="noopener" style="color:var(--m)">Durum</a><button id="bCanli" class="on">Canlı</button><button id="bBugun">Bugünkü maçlar</button></header>
 <main><div><div class="card" id="liste">Yükleniyor…</div></div><div id="detay"><div class="card muted">Soldan bir maç seç.</div></div></main>
 <script>
 let mod="canli",secili=null,lig="";

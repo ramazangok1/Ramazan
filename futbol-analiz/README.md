@@ -36,6 +36,10 @@ Render'da hesap aç → *New → Blueprint* → bu depoyu seç → (isteğe bağ
 Anahtar girmezsen sunucu demo veriyle açılır. Ücretsiz örnek, bir süre kullanılmayınca uyur ve ilk açılış ~1 dk sürebilir.
 Sunucu herkese açık olacağı için `GUNLUK_LIMIT` ayarı anahtarının kotasını korur.
 
+## Teşhis
+`/api/durum` kaynağı, anahtarın tanımlı olup olmadığını (anahtarın kendisi gösterilmez), harcanan istek sayısını, ayarları ve son hatayı gösterir.
+`/api/durum?test=1` gerçek bir API isteği yapıp sonucu raporlar (1 istek harcar). Arayüzde üstteki "Durum" bağlantısı da buraya gider.
+
 ## Backtest
 ```bash
 python backtest.py --lig tr.1   # Süper Lig; veriyi indirir (github), BACKTEST_tr.1.md yazar
