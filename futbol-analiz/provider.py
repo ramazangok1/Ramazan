@@ -9,13 +9,13 @@ class DemoProvider:
     ad = "demo"
 
     TAKIMLAR = {
-        "GS": {"ad": "Galatasaray", "atilan": 2.1, "yenilen": 0.8, "ev_atilan": 2.4, "ev_yenilen": 0.6, "dep_atilan": 1.8, "dep_yenilen": 1.0, "form": ["G", "G", "B", "G", "G"]},
-        "FB": {"ad": "Fenerbahçe", "atilan": 2.0, "yenilen": 0.9, "ev_atilan": 2.3, "ev_yenilen": 0.7, "dep_atilan": 1.7, "dep_yenilen": 1.1, "form": ["G", "B", "G", "G", "M"],
+        "GS": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Galatasaray", "atilan": 2.1, "yenilen": 0.8, "ev_atilan": 2.4, "ev_yenilen": 0.6, "dep_atilan": 1.8, "dep_yenilen": 1.0, "form": ["G", "G", "B", "G", "G"]},
+        "FB": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Fenerbahçe", "atilan": 2.0, "yenilen": 0.9, "ev_atilan": 2.3, "ev_yenilen": 0.7, "dep_atilan": 1.7, "dep_yenilen": 1.1, "form": ["G", "B", "G", "G", "M"],
                "sakat": [{"oyuncu": "Forvet A", "rol": "forvet"}, {"oyuncu": "Defans B", "rol": "defans"}]},
-        "BJK": {"ad": "Beşiktaş", "atilan": 1.6, "yenilen": 1.2, "form": ["M", "G", "B", "G", "B"]},
-        "TS": {"ad": "Trabzonspor", "atilan": 1.5, "yenilen": 1.3, "form": ["B", "M", "G", "B", "M"]},
-        "BS": {"ad": "Başakşehir", "atilan": 1.3, "yenilen": 1.1, "form": ["G", "B", "B", "M", "G"]},
-        "KON": {"ad": "Konyaspor", "atilan": 1.0, "yenilen": 1.6, "form": ["M", "M", "B", "G", "M"]},
+        "BJK": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Beşiktaş", "atilan": 1.6, "yenilen": 1.2, "form": ["M", "G", "B", "G", "B"]},
+        "TS": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Trabzonspor", "atilan": 1.5, "yenilen": 1.3, "form": ["B", "M", "G", "B", "M"]},
+        "BS": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Başakşehir", "atilan": 1.3, "yenilen": 1.1, "form": ["G", "B", "B", "M", "G"]},
+        "KON": {"n": 30, "ev_n": 15, "dep_n": 15, "ad": "Konyaspor", "atilan": 1.0, "yenilen": 1.6, "form": ["M", "M", "B", "G", "M"]},
     }
     MACLAR = [
         {"id": 1, "lig": "Süper Lig", "oranlar": {"ev": 2.30, "ber": 3.40, "dep": 3.00}, "ev": "GS", "dep": "FB", "baslangic": 0, "olaylar": [(12, "ev"), (38, "dep"), (67, "ev")], "kirmizi": [(55, "dep")]},
@@ -103,7 +103,8 @@ class ApiFootballProvider:
         st = self._get("/teams/statistics", team=takim_id, league=lig, season=sezon)
         if isinstance(st, list):  # bazı yanıtlarda dict döner
             st = st[0] if st else {}
-        oynanan = max(1, st.get("fixtures", {}).get("played", {}).get("total") or 1)
+        oyn = st.get("fixtures", {}).get("played", {})
+        oynanan = oyn.get("total") or 0
         gol = st.get("goals", {})
         atilan = float(gol.get("for", {}).get("average", {}).get("total") or 1.3)
         yenilen = float(gol.get("against", {}).get("average", {}).get("total") or 1.3)
@@ -112,9 +113,9 @@ class ApiFootballProvider:
         def ort(taraf, yon):
             v = gol.get(yon, {}).get("average", {}).get(taraf)
             return float(v) if v else None
-        return {"ad": ad, "atilan": atilan, "yenilen": yenilen, "form": form,
-                "ev_atilan": ort("home", "for"), "ev_yenilen": ort("home", "against"),
-                "dep_atilan": ort("away", "for"), "dep_yenilen": ort("away", "against")}
+        return {"ad": ad, "atilan": atilan, "yenilen": yenilen, "form": form, "n": oynanan,
+                "ev_atilan": ort("home", "for"), "ev_yenilen": ort("home", "against"), "ev_n": oyn.get("home") or 0,
+                "dep_atilan": ort("away", "for"), "dep_yenilen": ort("away", "against"), "dep_n": oyn.get("away") or 0}
 
     ROLLER = {"Attacker": "forvet", "Midfielder": "ortasaha", "Defender": "defans", "Goalkeeper": "kaleci"}
 
@@ -213,15 +214,16 @@ class FootballDataProvider:
             r = t.get(tip, {}).get(tid)
             if not r or not r["playedGames"]:
                 return None
-            return r["goalsFor"] / r["playedGames"], r["goalsAgainst"] / r["playedGames"]
-        genel = ort("TOTAL") or (1.3, 1.3)
+            return r["goalsFor"] / r["playedGames"], r["goalsAgainst"] / r["playedGames"], r["playedGames"]
+        genel = ort("TOTAL") or (1.3, 1.3, 0)
         ozel = ort("HOME" if ic_saha else "AWAY")
         ek = {}
         if ozel:
-            ek = {("ev_" if ic_saha else "dep_") + "atilan": ozel[0], ("ev_" if ic_saha else "dep_") + "yenilen": ozel[1]}
+            onek = "ev_" if ic_saha else "dep_"
+            ek = {onek + "atilan": ozel[0], onek + "yenilen": ozel[1], onek + "n": ozel[2]}
         satir = t.get("TOTAL", {}).get(tid, {})
         form = [{"W": "G", "D": "B", "L": "M"}.get(c, "B") for c in (satir.get("form") or "").split(",") if c][-5:]
-        return {"ad": ad, "atilan": genel[0], "yenilen": genel[1], "form": form, **ek}
+        return {"ad": ad, "atilan": genel[0], "yenilen": genel[1], "n": genel[2], "form": form, **ek}
 
     def detay(self, mac_id):
         m = self._get(f"/matches/{mac_id}")

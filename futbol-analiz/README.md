@@ -16,6 +16,7 @@ FOOTBALL_DATA_KEY=xxxx python server.py # football-data.org (skor, puan durumu, 
 - **Maç öncesi analiz**: takımların gol ortalaması ve formuna göre Poisson modeli, H2H geçmişi
 
 - **Lig filtresi**: maç listesinde ligine göre süzme
+- **Daraltma**: az maçla hesaplanan ortalamalar lig ortalamasına doğru çekilir (maç öncesi ve canlı model; backtest ile doğrulandı)
 - **İç saha / deplasman ayrımı**: ev avantajı takımların kendi iç saha/deplasman gol ortalamalarından gelir
 - **Sakatlıklar**: eksik forvet/orta saha/defans/kaleci modelin hücum-savunma gücünü düşürür (API-Football)
 - **Oranlar**: bahisçi marjı çıkarılmış piyasa olasılığı ile model karşılaştırması (API-Football)

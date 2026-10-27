@@ -57,34 +57,31 @@ def ort(liste, i):
     return sum(x[i] for x in liste) / len(liste)
 
 
-def daralt(deger, n, hedef, k):
-    return (n * deger + k * hedef) / (n + k)
-
-
 def takim_istatistik(gecmis, lig, ayar):
     """gecmis: [(ic_saha_mi, atilan, yenilen, sonuc)] eskiden yeniye."""
     son = gecmis[-PENCERE:]
-    k, (le, ld) = ayar.get("daralt", 0), lig
-    ort_lig = (le + ld) / 2
     n = len(son)
-    t = {"atilan": daralt(ort(son, 1), n, ort_lig, k), "yenilen": daralt(ort(son, 2), n, ort_lig, k),
-         "form": [x[3] for x in son[-5:]]}
+    t = {"atilan": ort(son, 1), "yenilen": ort(son, 2), "form": [x[3] for x in son[-5:]]}
+    if ayar.get("daralt"):
+        t["n"] = n  # daraltmayı analysis.py uygular (üretimle aynı kod)
     if ayar.get("bol"):
-        for ic, onek, hedef_at, hedef_ye in ((True, "ev_", le, ld), (False, "dep_", ld, le)):
+        for ic, onek in ((True, "ev_"), (False, "dep_")):
             alt = [x for x in gecmis if x[0] == ic][-PENCERE_IC:]
             if len(alt) >= 5:
                 m = len(alt)
-                t[onek + "atilan"] = daralt(ort(alt, 1), m, hedef_at, k)
-                t[onek + "yenilen"] = daralt(ort(alt, 2), m, hedef_ye, k)
+                t[onek + "atilan"] = ort(alt, 1)
+                t[onek + "yenilen"] = ort(alt, 2)
+                if ayar.get("daralt"):
+                    t[onek + "n"] = m
     return t
 
 
 AYARLAR = {
-    "1) Taban: genel ortalama": {"bol": False, "form": False, "daralt": 0},
-    "2) + iç saha/deplasman": {"bol": True, "form": False, "daralt": 0},
-    "3) + form (mevcut üretim)": {"bol": True, "form": True, "daralt": 0},
-    "4) üretim + daraltma (k=10)": {"bol": True, "form": True, "daralt": 10},
-    "5) iç saha/dep. + daraltma, formsuz": {"bol": True, "form": False, "daralt": 10},
+    "1) Taban: genel ortalama": {"bol": False, "form": False, "daralt": False},
+    "2) + iç saha/deplasman": {"bol": True, "form": False, "daralt": False},
+    "3) + form (mevcut üretim)": {"bol": True, "form": True, "daralt": False},
+    "4) üretim + daraltma (k=10)": {"bol": True, "form": True, "daralt": True},
+    "5) iç saha/dep. + daraltma, formsuz": {"bol": True, "form": False, "daralt": True},
 }
 
 

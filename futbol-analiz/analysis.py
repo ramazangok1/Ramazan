@@ -4,6 +4,7 @@ from math import exp, factorial
 MAX_GOALS = 10
 LIG_ORT_EV = 1.45     # lig ortalaması: ev sahibi gol
 LIG_ORT_DEP = 1.15    # lig ortalaması: deplasman gol
+DARALT_K = 10         # daraltma gücü: k kadar "hayali" lig ortalaması maçı eklenir (backtest ile seçildi)
 
 
 def pmf(k, lam):
@@ -26,23 +27,39 @@ def sakatlik_carpani(sakatlar):
     return max(hucum, 0.75), min(yenilen, 1.3)
 
 
-def _sayi(takim, ic_saha, tur):
-    """İç saha/deplasman ayrı ortalaması varsa onu, yoksa genel ortalamayı kullanır."""
-    ozel = takim.get(("ev_" if ic_saha else "dep_") + tur)
-    return ozel if ozel else takim[tur]
+def _sayi(takim, ic_saha, tur, lig):
+    """İç saha/deplasman ayrı ortalaması varsa onu, yoksa genel ortalamayı kullanır.
+
+    Takımda örneklem büyüklüğü varsa ('n', 'ev_n', 'dep_n') ortalama lig ortalamasına doğru
+    daraltılır: (n*ort + k*lig) / (n + k). Az maçla hesaplanmış uç değerleri yumuşatır.
+    Örneklem yoksa değer olduğu gibi kullanılır.
+    """
+    lig_ev, lig_dep = lig
+    onek = "ev_" if ic_saha else "dep_"
+    deger = takim.get(onek + tur)
+    if deger:
+        n = takim.get(onek + "n")
+        # ev_atilan / dep_yenilen lig ev golüne, dep_atilan / ev_yenilen lig dep golüne yakınsar
+        hedef = lig_ev if (ic_saha == (tur == "atilan")) else lig_dep
+    else:
+        deger, n, hedef = takim[tur], takim.get("n"), (lig_ev + lig_dep) / 2
+    if n is None:
+        return deger
+    return (n * deger + DARALT_K * hedef) / (n + DARALT_K)
 
 
 def beklenen_goller(ev, dep, lig=None):
     """ev/dep: {'atilan', 'yenilen'} (+ isteğe bağlı 'ev_atilan','ev_yenilen','dep_atilan',
-    'dep_yenilen' ve 'sakat'). Ev avantajı, iç saha/deplasman ayrı ortalamalarından
+    'dep_yenilen', örneklem için 'n','ev_n','dep_n' ve 'sakat'). Ev avantajı, iç saha/deplasman ayrı ortalamalarından
     ve lig iç saha/deplasman gol ortalamalarından gelir."""
     lig_ev, lig_dep = lig or (LIG_ORT_EV, LIG_ORT_DEP)
     e_h, e_y = sakatlik_carpani(ev.get("sakat"))
     d_h, d_y = sakatlik_carpani(dep.get("sakat"))
-    ev_hucum = _sayi(ev, True, "atilan") * e_h / lig_ev
-    dep_savunma = _sayi(dep, False, "yenilen") * d_y / lig_ev
-    dep_hucum = _sayi(dep, False, "atilan") * d_h / lig_dep
-    ev_savunma = _sayi(ev, True, "yenilen") * e_y / lig_dep
+    lig = (lig_ev, lig_dep)
+    ev_hucum = _sayi(ev, True, "atilan", lig) * e_h / lig_ev
+    dep_savunma = _sayi(dep, False, "yenilen", lig) * d_y / lig_ev
+    dep_hucum = _sayi(dep, False, "atilan", lig) * d_h / lig_dep
+    ev_savunma = _sayi(ev, True, "yenilen", lig) * e_y / lig_dep
     return (ev_hucum * dep_savunma * lig_ev,
             dep_hucum * ev_savunma * lig_dep)
 
