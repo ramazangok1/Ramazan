@@ -24,9 +24,11 @@ FOOTBALL_DATA_KEY=xxxx python server.py # football-data.org (skor, puan durumu, 
 
 ## Backtest
 ```bash
-python backtest.py      # veriyi indirir (github), BACKTEST.md yazar
+python backtest.py --lig tr.1   # Süper Lig; veriyi indirir (github), BACKTEST_tr.1.md yazar
+python backtest.py --lig eng.1  # diğer kodlar: de.1, es.1, it.1, fr.1, nl.1, pt.1 ...
 ```
-Premier Lig 2010-2020 (3800 maç) üzerinde walk-forward test; sonuçlar `BACKTEST.md` içinde.
+2010-11 – 2023-24 sezonlarında walk-forward test. Sonuçlar: `BACKTEST_tr.1.md`, `BACKTEST_eng.1.md`, `BACKTEST_cok_lig.md`.
+Özet: 1X2 ve 2.5 üst/alt tahmini 8 ligin hepsinde referansı geçiyor; karşılıklı gol (KG) tahmininde güvenilir sinyal yok.
 
 ## Dosyalar
 - `analysis.py` – olasılık modeli

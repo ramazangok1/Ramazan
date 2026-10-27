@@ -1,8 +1,9 @@
 """Geçmiş maçlarla walk-forward backtest.
 
 Her maç yalnızca o tarihten ÖNCE oynanmış maçlarla tahmin edilir (veri sızıntısı yok).
-Veri: github.com/footballcsv/england (sonuçlar; oran içermez).
-Çalıştır: python backtest.py [--sezonlar 2010-11,2011-12,...] [--yaz BACKTEST.md]
+Veri: github.com/footballcsv/turkey (football-data.co.uk önbelleği; tüm ligler, yalnızca sonuçlar).
+Çalıştır: python backtest.py [--lig tr.1] [--sezonlar 2010-11,2011-12,...] [--yaz BACKTEST_tr.1.md]
+Lig kodları: eng.1, tr.1, de.1, es.1, it.1, fr.1, nl.1, pt.1 ...
 """
 import argparse
 import csv
@@ -16,29 +17,28 @@ import requests
 
 import analysis
 
-URL = "https://raw.githubusercontent.com/footballcsv/england/master/{on}/{sezon}/eng.1.csv"
-SEZONLAR = [f"{y}-{str(y + 1)[2:]}" for y in range(2010, 2021)]
+URL = "https://raw.githubusercontent.com/footballcsv/turkey/master/{sezon}/{lig}.csv"
+SEZONLAR = [f"{y}-{str(y + 1)[2:]}" for y in range(2010, 2024)]
 ONBELLEK = os.path.join(os.path.dirname(__file__), "veri_onbellek")
 PENCERE, PENCERE_IC, MIN_MAC, ISINMA_LIG = 30, 15, 10, 300
 EPS = 1e-9
 
 
-def indir(sezon):
+def indir(lig, sezon):
     os.makedirs(ONBELLEK, exist_ok=True)
-    yol = os.path.join(ONBELLEK, f"eng1_{sezon}.csv")
+    yol = os.path.join(ONBELLEK, f"{lig}_{sezon}.csv")
     if not os.path.exists(yol):
-        on = "2020s" if int(sezon[:4]) >= 2020 else "2010s"
-        r = requests.get(URL.format(on=on, sezon=sezon), timeout=30)
+        r = requests.get(URL.format(lig=lig, sezon=sezon), timeout=30)
         if r.status_code != 200:
             return None
         open(yol, "w", encoding="utf-8").write(r.text)
     return open(yol, encoding="utf-8").read()
 
 
-def maclari_oku(sezonlar):
-    maclar = []
+def maclari_oku(lig, sezonlar):
+    maclar, atlanan = [], 0
     for s in sezonlar:
-        metin = indir(s)
+        metin = indir(lig, s)
         if not metin:
             print(f"uyarı: {s} indirilemedi, atlandı")
             continue
@@ -46,9 +46,12 @@ def maclari_oku(sezonlar):
             try:
                 eg, dg = map(int, r["FT"].strip().split("-"))
                 tarih = datetime.strptime(r["Date"].strip(), "%a %b %d %Y")
-            except (ValueError, KeyError):
+            except (ValueError, KeyError, AttributeError):
+                atlanan += 1
                 continue
             maclar.append((tarih, r["Team 1"], r["Team 2"], eg, dg))
+    if atlanan:
+        print(f"uyarı: {atlanan} satır okunamadı (skor/tarih yok), atlandı")
     maclar.sort(key=lambda m: m[0])
     return maclar
 
@@ -162,8 +165,8 @@ def kalibrasyon(kayitlar, anahtar="ev"):
     return [(k, v[0], v[1] / v[0], v[2] / v[0]) for k, v in sorted(kovalar.items()) if v[0] >= 20]
 
 
-def rapor(maclar, kayit):
-    s = [f"# Backtest sonuçları\n", f"Veri: İngiltere Premier Lig, {maclar[0][0]:%Y-%m-%d} – {maclar[-1][0]:%Y-%m-%d}, "
+def rapor(lig, maclar, kayit):
+    s = [f"# Backtest sonuçları: {lig}\n", f"Veri: {lig}, {maclar[0][0]:%Y-%m-%d} – {maclar[-1][0]:%Y-%m-%d}, "
          f"{len(maclar)} maç. Değerlendirilen: {len(next(iter(kayit.values())))} maç (ısınma sonrası, her iki takımın en az "
          f"{MIN_MAC} önceki maçı var). Walk-forward: her maç yalnızca öncesindeki verilerle tahmin edildi.\n",
          "| Model | Doğruluk 1X2 | Log loss ↓ | Brier ↓ | RPS ↓ | 2.5 Üst doğr. | 2.5 Üst log loss ↓ | KG doğr. | KG log loss ↓ |",
@@ -183,10 +186,11 @@ def rapor(maclar, kayit):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
+    ap.add_argument("--lig", default="eng.1")
     ap.add_argument("--sezonlar", default=",".join(SEZONLAR))
-    ap.add_argument("--yaz", default="BACKTEST.md")
+    ap.add_argument("--yaz")
     a = ap.parse_args()
-    maclar = maclari_oku(a.sezonlar.split(","))
-    metin = rapor(maclar, calistir(maclar))
+    maclar = maclari_oku(a.lig, a.sezonlar.split(","))
+    metin = rapor(a.lig, maclar, calistir(maclar))
     print(metin)
-    open(a.yaz, "w", encoding="utf-8").write(metin)
+    open(a.yaz or f"BACKTEST_{a.lig}.md", "w", encoding="utf-8").write(metin)
