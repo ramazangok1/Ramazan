@@ -20,8 +20,15 @@ FOOTBALL_DATA_KEY=xxxx python server.py # football-data.org (skor, puan durumu, 
 - **Sakatlıklar**: eksik forvet/orta saha/defans/kaleci modelin hücum-savunma gücünü düşürür (API-Football)
 - **Oranlar**: bahisçi marjı çıkarılmış piyasa olasılığı ile model karşılaştırması (API-Football)
 
+## Backtest
+```bash
+python backtest.py      # veriyi indirir (github), BACKTEST.md yazar
+```
+Premier Lig 2010-2020 (3800 maç) üzerinde walk-forward test; sonuçlar `BACKTEST.md` içinde.
+
 ## Dosyalar
 - `analysis.py` – olasılık modeli
+- `backtest.py` – geçmiş maç testi
 - `provider.py` – veri kaynakları (demo + API-Football)
 - `server.py` – HTTP sunucu, `static/index.html` – arayüz
 

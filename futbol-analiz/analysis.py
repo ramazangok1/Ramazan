@@ -32,18 +32,19 @@ def _sayi(takim, ic_saha, tur):
     return ozel if ozel else takim[tur]
 
 
-def beklenen_goller(ev, dep):
+def beklenen_goller(ev, dep, lig=None):
     """ev/dep: {'atilan', 'yenilen'} (+ isteğe bağlı 'ev_atilan','ev_yenilen','dep_atilan',
     'dep_yenilen' ve 'sakat'). Ev avantajı, iç saha/deplasman ayrı ortalamalarından
     ve lig iç saha/deplasman gol ortalamalarından gelir."""
+    lig_ev, lig_dep = lig or (LIG_ORT_EV, LIG_ORT_DEP)
     e_h, e_y = sakatlik_carpani(ev.get("sakat"))
     d_h, d_y = sakatlik_carpani(dep.get("sakat"))
-    ev_hucum = _sayi(ev, True, "atilan") * e_h / LIG_ORT_EV
-    dep_savunma = _sayi(dep, False, "yenilen") * d_y / LIG_ORT_EV
-    dep_hucum = _sayi(dep, False, "atilan") * d_h / LIG_ORT_DEP
-    ev_savunma = _sayi(ev, True, "yenilen") * e_y / LIG_ORT_DEP
-    return (ev_hucum * dep_savunma * LIG_ORT_EV,
-            dep_hucum * ev_savunma * LIG_ORT_DEP)
+    ev_hucum = _sayi(ev, True, "atilan") * e_h / lig_ev
+    dep_savunma = _sayi(dep, False, "yenilen") * d_y / lig_ev
+    dep_hucum = _sayi(dep, False, "atilan") * d_h / lig_dep
+    ev_savunma = _sayi(ev, True, "yenilen") * e_y / lig_dep
+    return (ev_hucum * dep_savunma * lig_ev,
+            dep_hucum * ev_savunma * lig_dep)
 
 
 def olasiliklar(lam_ev, lam_dep, skor=(0, 0)):
@@ -83,8 +84,8 @@ def form_puani(son_maclar):
     return sum(puan[r] * w for r, w in zip(son_maclar, agirlik)) / sum(agirlik)
 
 
-def mac_oncesi(ev, dep):
-    lam_ev, lam_dep = beklenen_goller(ev, dep)
+def mac_oncesi(ev, dep, lig=None):
+    lam_ev, lam_dep = beklenen_goller(ev, dep, lig)
     # Form etkisi: en fazla ±%10
     lam_ev *= 1 + 0.2 * (form_puani(ev["form"]) - 0.5)
     lam_dep *= 1 + 0.2 * (form_puani(dep["form"]) - 0.5)
