@@ -10,9 +10,12 @@ def yukle(yol):
     """football-data.co.uk (Date,HomeTeam,AwayTeam,FTHG,FTAG) ya da date,home,away,hg,ag."""
     df = pd.read_csv(yol)
     df = df.rename(columns={"Date": "date", "HomeTeam": "home", "AwayTeam": "away",
-                            "FTHG": "hg", "FTAG": "ag"})
+                            "FTHG": "hg", "FTAG": "ag",
+                            "home_team": "home", "away_team": "away",
+                            "home_score": "hg", "away_score": "ag"})
     df = df[["date", "home", "away", "hg", "ag"]].dropna()
-    df["date"] = pd.to_datetime(df["date"], dayfirst=True, format="mixed")
+    iso = df["date"].astype(str).str.match(r"^\d{4}-\d{2}-\d{2}")
+    df["date"] = pd.to_datetime(df["date"], dayfirst=not iso.all(), format="mixed")
     return df.sort_values("date").reset_index(drop=True)
 
 def _tau(x, y, lh, la, rho):
@@ -42,8 +45,7 @@ class DixonColes:
             pen = 1e-3 * (np.sum(atk**2) + np.sum(dfn**2))   # asiri ogrenmeyi onler
             return -(w * ll).sum() + pen
         p0 = np.concatenate([np.zeros(2*n), [0.25, -0.05]])
-        cons = {"type": "eq", "fun": lambda p: p[:n].sum()}
-        r = minimize(nll, p0, constraints=cons, method="SLSQP", options={"maxiter": 200})
+        r = minimize(nll, p0, method="L-BFGS-B", options={"maxiter": 300})
         self.atk = dict(zip(self.takimlar, r.x[:n])); self.dfn = dict(zip(self.takimlar, r.x[n:2*n]))
         self.ha, self.rho = r.x[2*n], r.x[2*n+1]
         return self
